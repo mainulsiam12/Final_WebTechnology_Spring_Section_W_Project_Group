@@ -1,163 +1,63 @@
 <?php
 
+include '../config/database.php';
+include '../models/Borrow.php';
+
 class BorrowController {
 
-    private $conn;
+    private $borrowModel;
 
-    public function __construct($db){
-        $this->conn = $db;
+    public function __construct(){
+
+        $database = new Database();
+        $db = $database->OpenCon();
+
+        $this->borrowModel = new Borrow($db);
     }
 
     // Borrow Book
     public function borrowBook($member_id, $book_id){
 
-        $sql = "
-        SELECT total_copies -
-        COUNT(CASE WHEN status='Active' THEN 1 END) AS available
-
-        FROM books
-
-        LEFT JOIN borrow_records
-        ON books.id = borrow_records.book_id
-
-        WHERE books.id=?
-
-        GROUP BY books.id
-        ";
-
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([$book_id]);
-
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $data = $this->borrowModel->checkBook($book_id);
 
         if($data['available'] <= 0){
-            return "Book unavailable";
+
+            echo "Book Unavailable";
+            return;
+
         }
 
-        $sql = "
-        INSERT INTO borrow_records
-        (member_id, book_id, status, borrow_date, due_date)
+        $this->borrowModel->borrowBook($member_id, $book_id);
 
-        VALUES
-        (?, ?, 'Pending', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY))
-        ";
-
-        $stmt = $this->conn->prepare($sql);
-
-        $stmt->execute([
-            $member_id,
-            $book_id
-        ]);
-
-        return "Borrow Request Sent";
+        echo "Borrow Request Sent";
     }
 
-    // Approve Borrow
+    // Approve
     public function approveBorrow($id){
 
-        $sql = "
-        UPDATE borrow_records
-        SET status='Active'
-        WHERE id=?
-        ";
+        $this->borrowModel->approveBorrow($id);
 
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([$id]);
-
-        return true;
+        echo json_encode([
+            'success' => true
+        ]);
     }
 
-    // Reject Borrow
+    // Reject
     public function rejectBorrow($id){
 
-        $sql = "
-        DELETE FROM borrow_records
-        WHERE id=?
-        ";
+        $this->borrowModel->rejectBorrow($id);
 
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([$id]);
-
-        return true;
+        echo json_encode([
+            'success' => true
+        ]);
     }
 
-    // Return Book
+    // Return
     public function returnBook($id){
 
-        $sql = "
-        UPDATE borrow_records
+        $this->borrowModel->returnBook($id);
 
-        SET
-        status='Returned',
-        return_date=NOW()
-
-        WHERE id=?
-        ";
-
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([$id]);
-
-        return "Book Returned";
-    }
-
-    // Get Pending Requests
-    public function pendingRequests(){
-
-        $sql = "
-        SELECT borrow_records.id,
-        members.name,
-        books.title,
-        borrow_date
-
-        FROM borrow_records
-
-        JOIN members
-        ON borrow_records.member_id = members.id
-
-        JOIN books
-        ON borrow_records.book_id = books.id
-
-        WHERE status='Pending'
-        ";
-
-        $stmt = $this->conn->query($sql);
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    // Search Active Loans
-    public function activeLoans($search = ''){
-
-        $sql = "
-        SELECT borrow_records.id,
-        members.name,
-        books.title,
-        due_date
-
-        FROM borrow_records
-
-        JOIN members
-        ON borrow_records.member_id = members.id
-
-        JOIN books
-        ON borrow_records.book_id = books.id
-
-        WHERE status='Active'
-
-        AND (
-            members.name LIKE ?
-            OR books.title LIKE ?
-        )
-        ";
-
-        $stmt = $this->conn->prepare($sql);
-
-        $stmt->execute([
-            \"%$search%\",
-            \"%$search%\"
-        ]);
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo "Book Returned";
     }
 
 }

@@ -1,101 +1,109 @@
 <?php
-session_start();
-include 'config/database.php';
 
-$sql = "SELECT books.*,
+session_start();
+
+include '../../config/database.php';
+
+$database = new Database();
+$conn = $database->OpenCon();
+
+$sql = "
+SELECT books.*,
 (
-    books.total_copies -
-    COUNT(CASE WHEN borrow_records.status='Active' THEN 1 END)
-) AS available_copies
+books.total_copies -
+COUNT(CASE WHEN borrow_records.status='Active' THEN 1 END)
+) AS available
 
 FROM books
 
 LEFT JOIN borrow_records
 ON books.id = borrow_records.book_id
 
-GROUP BY books.id";
+GROUP BY books.id
+";
 
-$stmt = $conn->query($sql);
-$books = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$result = mysqli_query($conn, $sql);
 ?>
 
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Books</title>
 
-    <style>
+<title>Books</title>
 
-        body{
-            font-family: Arial;
-            padding:20px;
-        }
+<style>
 
-        .book-card{
-            border:1px solid #ccc;
-            padding:15px;
-            margin-bottom:15px;
-        }
+body{
+    font-family:Arial;
+    padding:20px;
+}
 
-        .available{
-            color:green;
-            font-weight:bold;
-        }
+.book{
+    border:1px solid #ccc;
+    padding:15px;
+    margin-bottom:15px;
+}
 
-        .unavailable{
-            color:red;
-            font-weight:bold;
-        }
+.available{
+    color:green;
+}
 
-        button{
-            padding:8px 12px;
-            cursor:pointer;
-        }
+.unavailable{
+    color:red;
+}
 
-    </style>
+button{
+    padding:8px 12px;
+}
+
+</style>
+
 </head>
 
 <body>
 
-<h2>Book List</h2>
+<h2>Books</h2>
 
-<?php foreach($books as $book): ?>
+<?php while($row = mysqli_fetch_assoc($result)){ ?>
 
-<div class="book-card">
+<div class="book">
 
-    <h3><?php echo $book['title']; ?></h3>
+    <h3><?php echo $row['title']; ?></h3>
 
-    <p>Author: <?php echo $book['author']; ?></p>
+    <p>Author : <?php echo $row['author']; ?></p>
 
     <p>
-        Available Copies:
 
-        <?php if($book['available_copies'] > 0): ?>
+        Available :
+
+        <?php if($row['available'] > 0){ ?>
 
             <span class="available">
-                <?php echo $book['available_copies']; ?>
+                <?php echo $row['available']; ?>
             </span>
 
-        <?php else: ?>
+            <br><br>
+
+            <a href="../../borrow_book.php?book_id=<?php echo $row['id']; ?>">
+
+                <button>Borrow</button>
+
+            </a>
+
+        <?php } else { ?>
 
             <span class="unavailable">
                 Unavailable
             </span>
 
-        <?php endif; ?>
+        <?php } ?>
+
     </p>
-
-    <?php if($book['available_copies'] > 0): ?>
-
-        <a href="borrow_book.php?book_id=<?php echo $book['id']; ?>">
-            <button>Borrow</button>
-        </a>
-
-    <?php endif; ?>
 
 </div>
 
-<?php endforeach; ?>
+<?php } ?>
 
 </body>
 </html>
