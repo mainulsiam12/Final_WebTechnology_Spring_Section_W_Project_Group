@@ -1,6 +1,9 @@
 <?php
+
 class Database {
-    public function OpenCon() { 
+
+    public function OpenCon() {
+
         $db_server = "localhost";
         $db_user = "root";
         $db_pass = "";
