@@ -1,21 +1,27 @@
 <?php
 
-class Database {
+$host = "localhost";
+$dbname = "library_system";
+$username = "root";
+$password = "";
 
-    public function OpenCon() {
+try{
 
-        $db_server = "localhost";
-        $db_user = "root";
-        $db_pass = "";
-        $db_name = "library_management_system";
-        $db = "";
+    $conn = new PDO(
+        "mysql:host=$host;dbname=$dbname",
+        $username,
+        $password
+    );
 
-        try {
-            $db = mysqli_connect($db_server, $db_user, $db_pass, $db_name);
-        } catch(mysqli_sql_exception $e) {
-            echo "<script>alert('Database connection failed');</script>";
-        }
-        return $db;
-    }
+    $conn->setAttribute(
+        PDO::ATTR_ERRMODE,
+        PDO::ERRMODE_EXCEPTION
+    );
+
+}catch(PDOException $e){
+
+    die("Connection Failed : " . $e->getMessage());
+
 }
+
 ?>
