@@ -5,9 +5,9 @@ function auth_check($required_role = null) {
         exit();
     }
     if ($required_role !== null && $_SESSION['role'] !== $required_role) {
-        if ($_SESSION['role'] == 'member') { header("Location: ../views/Member/Dashboard.php"); } 
-        elseif ($_SESSION['role'] == 'librarian') { header("Location: ../views/Librarian/Dashboard.php"); } 
-        elseif ($_SESSION['role'] == 'admin') { header("Location: ../views/Admin/Dashboard.php"); }
+        if ($_SESSION['role'] == 'member') { header("Location: ../views/member/Dashboard.php"); } 
+        elseif ($_SESSION['role'] == 'librarian') { header("Location: ../views/librarian/Dashboard.php"); } 
+        elseif ($_SESSION['role'] == 'admin') { header("Location: ../views/admin/Dashboard.php"); }
         exit();
     }
 }

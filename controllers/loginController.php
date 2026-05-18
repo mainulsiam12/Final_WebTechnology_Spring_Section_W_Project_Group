@@ -28,9 +28,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['name'] = $user['name'];
             $_SESSION['role'] = $user['role'];
             
-            if ($user['role'] == "member") header("Location: ../views/Member/Dashboard.php");
-            elseif ($user['role'] == "librarian") header("Location: ../views/Librarian/Dashboard.php");
-            elseif ($user['role'] == "admin") header("Location: ../views/Admin/Dashboard.php");
+            if ($user['role'] == "member") header("Location: ../views/member/Dashboard.php");
+            elseif ($user['role'] == "librarian") header("Location: ../views/librarian/Dashboard.php");
+            elseif ($user['role'] == "admin") header("Location: ../views/admin/Dashboard.php");
             exit();
         }
     }

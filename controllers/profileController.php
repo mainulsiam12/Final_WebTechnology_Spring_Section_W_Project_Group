@@ -27,14 +27,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         if ($errors) {
-            header("Location: ../views/Member/Dashboard.php");
+            header("Location: ../views/member/Dashboard.php");
             exit();
         }
 
         $model->updateProfile($userId, $name, $email, $phone);
         $_SESSION['name'] = $name; 
         $_SESSION['success'] = "Profile updated.";
-        header("Location: ../views/Member/Dashboard.php");
+        header("Location: ../views/member/Dashboard.php");
         exit();
     }
 
@@ -44,19 +44,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         if (!password_verify($current_password, $user['password_hash'])) {
             $_SESSION['PassError'] = "Current password incorrect";
-            header("Location: ../views/Member/Dashboard.php");
+            header("Location: ../views/member/Dashboard.php");
             exit();
         }
 
         if (strlen($new_password) < 8) {
             $_SESSION['PassError'] = "New password must be >= 8 chars";
-            header("Location: ../views/Member/Dashboard.php");
+            header("Location: ../views/member/Dashboard.php");
             exit();
         }
 
         $model->updatePassword($userId, password_hash($new_password, PASSWORD_DEFAULT));
         $_SESSION['success'] = "Password changed.";
-        header("Location: ../views/Member/Dashboard.php");
+        header("Location: ../views/member/Dashboard.php");
         exit();
     }
 }
