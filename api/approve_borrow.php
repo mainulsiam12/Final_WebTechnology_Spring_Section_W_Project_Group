@@ -1,22 +1,11 @@
 <?php
 
-header('Content-Type: application/json');
-
-include 'config/database.php';
+include '../controllers/BorrowController.php';
 
 $id = $_POST['id'];
 
-$sql = "
-UPDATE borrow_records
-SET status='Active'
-WHERE id=?
-";
+$borrow = new BorrowController();
 
-$stmt = $conn->prepare($sql);
+$borrow->approveBorrow($id);
 
-$stmt->execute([$id]);
-
-echo json_encode([
-    'success' => true
-]);
 ?>

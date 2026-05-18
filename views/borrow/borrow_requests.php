@@ -1,26 +1,15 @@
 <?php
-include 'config/database.php';
 
-$sql = "
-SELECT borrow_records.id,
-members.name AS member_name,
-books.title,
-borrow_records.borrow_date
+include '../../config/database.php';
+include '../../models/Borrow.php';
 
-FROM borrow_records
+$database = new Database();
+$conn = $database->OpenCon();
 
-JOIN members
-ON borrow_records.member_id = members.id
+$borrow = new Borrow($conn);
 
-JOIN books
-ON borrow_records.book_id = books.id
+$result = $borrow->pendingRequests();
 
-WHERE borrow_records.status='Pending'
-";
-
-$stmt = $conn->query($sql);
-
-$requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -28,85 +17,79 @@ $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <head>
 
-    <title>Borrow Requests</title>
+<title>Requests</title>
 
-    <style>
+<style>
 
-        body{
-            font-family:Arial;
-            padding:20px;
-        }
+table{
+    width:100%;
+    border-collapse:collapse;
+}
 
-        table{
-            width:100%;
-            border-collapse:collapse;
-        }
+table,th,td{
+    border:1px solid black;
+}
 
-        table, th, td{
-            border:1px solid #ccc;
-        }
+th,td{
+    padding:10px;
+}
 
-        th, td{
-            padding:10px;
-            text-align:left;
-        }
+button{
+    padding:6px 10px;
+}
 
-        button{
-            padding:6px 10px;
-            margin-right:5px;
-            cursor:pointer;
-        }
-
-    </style>
+</style>
 
 </head>
 
 <body>
 
-<h2>Pending Borrow Requests</h2>
+<h2>Pending Requests</h2>
 
 <table>
 
 <tr>
-    <th>Member</th>
-    <th>Book</th>
-    <th>Date</th>
-    <th>Action</th>
-</tr>
 
-<?php foreach($requests as $row): ?>
-
-<tr id="row-<?php echo $row['id']; ?>">
-
-    <td><?php echo $row['member_name']; ?></td>
-
-    <td><?php echo $row['title']; ?></td>
-
-    <td><?php echo $row['borrow_date']; ?></td>
-
-    <td>
-
-        <button onclick="approveBorrow(<?php echo $row['id']; ?>)">
-            Approve
-        </button>
-
-        <button onclick="rejectBorrow(<?php echo $row['id']; ?>)">
-            Reject
-        </button>
-
-    </td>
+<th>Member</th>
+<th>Book</th>
+<th>Date</th>
+<th>Action</th>
 
 </tr>
 
-<?php endforeach; ?>
+<?php while($row = mysqli_fetch_assoc($result)){ ?>
+
+<tr id="row<?php echo $row['id']; ?>">
+
+<td><?php echo $row['name']; ?></td>
+
+<td><?php echo $row['title']; ?></td>
+
+<td><?php echo $row['borrow_date']; ?></td>
+
+<td>
+
+<button onclick="approve(<?php echo $row['id']; ?>)">
+Approve
+</button>
+
+<button onclick="rejectBorrow(<?php echo $row['id']; ?>)">
+Reject
+</button>
+
+</td>
+
+</tr>
+
+<?php } ?>
 
 </table>
 
 <script>
 
-function approveBorrow(id){
+function approve(id){
 
-    fetch('approve_borrow.php',{
+    fetch('../../api/approve.php',{
 
         method:'POST',
 
@@ -118,12 +101,14 @@ function approveBorrow(id){
 
     })
 
-    .then(response => response.json())
+    .then(res => res.json())
 
     .then(data => {
 
         if(data.success){
-            document.getElementById('row-' + id).remove();
+
+            document.getElementById('row'+id).remove();
+
         }
 
     });
@@ -132,7 +117,7 @@ function approveBorrow(id){
 
 function rejectBorrow(id){
 
-    fetch('reject_borrow.php',{
+    fetch('../../api/reject.php',{
 
         method:'POST',
 
@@ -144,12 +129,14 @@ function rejectBorrow(id){
 
     })
 
-    .then(response => response.json())
+    .then(res => res.json())
 
     .then(data => {
 
         if(data.success){
-            document.getElementById('row-' + id).remove();
+
+            document.getElementById('row'+id).remove();
+
         }
 
     });

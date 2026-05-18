@@ -1,5 +1,12 @@
 <?php
-include 'config/database.php';
+
+include '../../config/database.php';
+include '../../models/Borrow.php';
+
+$database = new Database();
+$conn = $database->OpenCon();
+
+$borrow = new Borrow($conn);
 
 $search = "";
 
@@ -7,36 +14,8 @@ if(isset($_GET['search'])){
     $search = $_GET['search'];
 }
 
-$sql = "
-SELECT borrow_records.id,
-members.name AS member_name,
-books.title,
-borrow_records.borrow_date,
-borrow_records.due_date
+$result = $borrow->activeLoans($search);
 
-FROM borrow_records
-
-JOIN members
-ON borrow_records.member_id = members.id
-
-JOIN books
-ON borrow_records.book_id = books.id
-
-WHERE borrow_records.status='Active'
-AND (
-    members.name LIKE ?
-    OR books.title LIKE ?
-)
-";
-
-$stmt = $conn->prepare($sql);
-
-$stmt->execute([
-    "%$search%",
-    "%$search%"
-]);
-
-$records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -44,39 +23,32 @@ $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <head>
 
-    <title>Return Books</title>
+<title>Return Books</title>
 
-    <style>
+<style>
 
-        body{
-            font-family:Arial;
-            padding:20px;
-        }
+table{
+    width:100%;
+    border-collapse:collapse;
+}
 
-        table{
-            width:100%;
-            border-collapse:collapse;
-        }
+table,th,td{
+    border:1px solid black;
+}
 
-        table, th, td{
-            border:1px solid #ccc;
-        }
+th,td{
+    padding:10px;
+}
 
-        th, td{
-            padding:10px;
-        }
+input{
+    padding:8px;
+}
 
-        input{
-            padding:8px;
-            width:300px;
-        }
+button{
+    padding:8px 12px;
+}
 
-        button{
-            padding:8px 12px;
-            cursor:pointer;
-        }
-
-    </style>
+</style>
 
 </head>
 
@@ -84,14 +56,13 @@ $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <h2>Return Books</h2>
 
-<form method="GET">
+<form>
 
-    <input type="text"
-           name="search"
-           placeholder="Search member or book"
-           value="<?php echo $search; ?>">
+<input type="text"
+name="search"
+placeholder="Search">
 
-    <button type="submit">Search</button>
+<button>Search</button>
 
 </form>
 
@@ -100,36 +71,37 @@ $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <table>
 
 <tr>
-    <th>Member</th>
-    <th>Book</th>
-    <th>Borrow Date</th>
-    <th>Due Date</th>
-    <th>Action</th>
+
+<th>Member</th>
+<th>Book</th>
+<th>Due Date</th>
+<th>Action</th>
+
 </tr>
 
-<?php foreach($records as $row): ?>
+<?php while($row = mysqli_fetch_assoc($result)){ ?>
 
 <tr>
 
-    <td><?php echo $row['member_name']; ?></td>
+<td><?php echo $row['name']; ?></td>
 
-    <td><?php echo $row['title']; ?></td>
+<td><?php echo $row['title']; ?></td>
 
-    <td><?php echo $row['borrow_date']; ?></td>
+<td><?php echo $row['due_date']; ?></td>
 
-    <td><?php echo $row['due_date']; ?></td>
+<td>
 
-    <td>
+<a href="../../process_return.php?id=<?php echo $row['id']; ?>">
 
-        <a href="process_return.php?id=<?php echo $row['id']; ?>">
-            <button>Process Return</button>
-        </a>
+<button>Return</button>
 
-    </td>
+</a>
+
+</td>
 
 </tr>
 
-<?php endforeach; ?>
+<?php } ?>
 
 </table>
 

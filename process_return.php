@@ -1,19 +1,11 @@
 <?php
 
-include 'config/database.php';
+include 'controllers/BorrowController.php';
 
 $id = $_GET['id'];
 
-$sql = "
-UPDATE borrow_records
-SET status='Returned',
-return_date=NOW()
-WHERE id=?
-";
+$borrow = new BorrowController();
 
-$stmt = $conn->prepare($sql);
+$borrow->returnBook($id);
 
-$stmt->execute([$id]);
-
-echo "Book Returned Successfully";
 ?>
